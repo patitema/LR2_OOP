@@ -6,7 +6,7 @@ class Room:
         self.is_available = True
 
     def __str__(self):
-        return (f"Room {self.room_number} ({self.room_type}), Price: ${self.price}, Available: {self.is_available}")
+        return (f"Room {self.room_number} ({self.room_type}), Price: {self.price} RUB, Available: {self.is_available}")
 
 class Guest:
     def __init__(self, name):
@@ -28,8 +28,7 @@ class Reservation:
         room.is_available = False
 
     def __str__(self):
-        return f"Reservation for {self.guest.name}, Room {self.room.room_number}, 
-        Dates: {self.dates[0]} to {self.dates[1]}"
+        return f"Reservation for {self.guest.name}, Room {self.room.room_number}, Dates: {self.dates[0]} to {self.dates[1]}"
 
 class Payment:
     def __init__(self, reservation):
@@ -39,10 +38,10 @@ class Payment:
 
     def pay(self):
         self.is_paid = True
-        print(f"Payment of {self.amount}RUB for reservation {self.reservation} is completed.")
+        print(f"Payment of {self.amount} RUB for reservation {self.reservation} is completed.")
 
     def __str__(self):
-        return f"Payment for {self.reservation.guest.name}, Amount: {self.amount}RUB, Paid: {self.is_paid}"
+        return f"Payment for {self.reservation.guest.name}, Amount: {self.amount} RUB, Paid: {self.is_paid}"
 
 class Hotel:
     def __init__(self, name):
@@ -80,47 +79,60 @@ class Hotel:
         self.payments.append(payment)
 
     def __str__(self):
-        return (f"Hotel: {self.name}, "
-                f"Rooms: {len(self.rooms)}, "
-                f"Guests: {len(self.guests)}, "
-                f"Reservations: {len(self.reservations)}")
+        return (f"Hotel: {self.name}, Rooms: {len(self.rooms)}, Guests: {len(self.guests)}, Reservations: {len(self.reservations)}")
 
 
-# Демонстрация работы с классами
-if __name__ == "__main__":
-    # Создаем отель
-    hotel = Hotel("Grand Hotel")
+# Работа кода
 
-    # Добавляем номера
-    room1 = Room(101, "Single", 5000)
-    room2 = Room(102, "Double", 9000)
-    hotel.add_room(room1)
-    hotel.add_room(room2)
+# Создаем отель
+hotel = Hotel("Grand Hotel")
 
-    # Регистрируем гостей
-    guest1 = Guest("Alice")
-    guest2 = Guest("Bob")
-    hotel.add_guest(guest1)
-    hotel.add_guest(guest2)
+# Добавляем номера
+room1 = Room(101, "Single", 5000)
+room2 = Room(102, "Double", 9000)
+hotel.add_room(room1)
+hotel.add_room(room2)
 
-    # Бронируем номера
-    print(hotel.make_reservation(guest1, room1, "2023-10-01", "2023-10-05"), "\n")
-    print(hotel.make_reservation(guest2, room2, "2023-10-02", "2023-10-06"), "\n")
+# Регистрируем гостей
+guest1 = Guest("Alice")
+guest2 = Guest("Bob")
+hotel.add_guest(guest1)
+hotel.add_guest(guest2)
 
-    # Обрабатываем оплату
-    for reservation in hotel.reservations:
-        print(hotel.process_payment(reservation), "\n")
+# Бронируем номера
+print(hotel.make_reservation(guest1, room1, "2023-10-01", "2023-10-05"), "\n")
+print(hotel.make_reservation(guest2, room2, "2023-10-02", "2023-10-06"), "\n")
 
-    # Выводим информацию
-    print(hotel, "\n")
-    print(room1, "\n")
-    print(room2, "\n")
-    print(guest1, "\n")
-    print(guest2, "\n")
+# Обрабатываем оплату
+for reservation in hotel.reservations:
+    print(hotel.process_payment(reservation), "\n")
 
-    # Отменяем бронирование
-    print(hotel.cancel_reservation(hotel.reservations[0]), "\n")
+# Выводим информацию
+print(hotel, "\n")
 
-    # Выводим информацию после отмены
-    print(hotel, "\n")
-    print(room1, "\n")
+# Выводим все номера
+print("All rooms:")
+for room in hotel.rooms:
+    print(room, "\n")
+
+# Выводим всех гостей
+print("All guests:")
+for guest in hotel.guests:
+    print(guest, "\n")
+
+# Выводим все бронирования
+print("All reservations:")
+for reservation in hotel.reservations:
+    print(reservation, "\n")
+
+# Выводим все оплаты
+print("All payments:")
+for payment in hotel.payments:
+    print(payment, "\n")
+
+# Отменяем бронирование
+print(hotel.cancel_reservation(hotel.reservations[0]), "\n")
+
+# Выводим информацию после отмены
+print(hotel, "\n")
+print(room1, "\n")
