@@ -8,16 +8,26 @@ class Room:
     def __str__(self):
         return (f"Room {self.room_number} ({self.room_type}), Price: {self.price} RUB, Available: {self.is_available}")
 
-class Guest:
-    def __init__(self, name):
+class Person:
+    def __init__(self, name, lastName, age):
         self.name = name
+        self.lastName = lastName
+        self.age = age
+
+    def __str__(self):
+        return f"Person: {self.name} {self.lastName}, age: {self.age}"
+
+
+class Guest(Person):
+    def __init__(self, name, lastName):
+        super().__init__(name, lastName)
         self.reservations = []
 
     def add_reservation(self, reservation):
         self.reservations.append(reservation)
 
     def __str__(self):
-        return f"Guest: {self.name}, Reservations: {len(self.reservations)}"
+        return f"Guest: {self.name} {self.lastName}, Reservations: {len(self.reservations)}"
 
 class Reservation:
     def __init__(self, guest, room, check_in_date, check_out_date):
@@ -38,7 +48,7 @@ class Payment:
 
     def pay(self):
         self.is_paid = True
-        print(f"Payment of {self.amount} RUB for reservation {self.reservation} is completed.")
+        print(f"Payment of {self.amount} RUB for reservation {self.reservation} is completed.", "\n")
 
     def __str__(self):
         return f"Payment for {self.reservation.guest.name}, Amount: {self.amount} RUB, Paid: {self.is_paid}"
@@ -61,17 +71,17 @@ class Hotel:
         if room.is_available:
             reservation = Reservation(guest, room, check_in_date, check_out_date)
             self.reservations.append(reservation)
-            print(f"Reservation made: {reservation}")
+            print(f"Reservation made: {reservation}", "\n")
         else:
-            print(f"Room {room.room_number} is not available.")
+            print(f"Room {room.room_number} is not available.", "\n")
 
     def cancel_reservation(self, reservation):
         if reservation in self.reservations:
             reservation.room.is_available = True
             self.reservations.remove(reservation)
-            print(f"Reservation canceled: {reservation}")
+            print(f"Reservation canceled: {reservation}", "\n")
         else:
-            print("Reservation not found.")
+            print("Reservation not found.", "\n")
 
     def process_payment(self, reservation):
         payment = Payment(reservation)
@@ -80,9 +90,26 @@ class Hotel:
 
     def __str__(self):
         return (f"Hotel: {self.name}, Rooms: {len(self.rooms)}, Guests: {len(self.guests)}, Reservations: {len(self.reservations)}")
+    
+    def showGuests(self):
+        print("Guests:")
+        for guest in self.guests:
+            print(guest, "\n")
 
+    def showRooms(self):
+        print("Rooms:")
+        for room in self.rooms:
+            print(room, "\n")
 
-# Работа кода
+    def showReservations(self):
+        print("Reservations:")
+        for reservation in self.reservations:
+            print(reservation, "\n")
+
+    def showPayments(self):
+        print("Payments:")
+        for payment in self.payments:
+            print(payment, "\n")
 
 # Создаем отель
 hotel = Hotel("Grand Hotel")
@@ -100,38 +127,22 @@ hotel.add_guest(guest1)
 hotel.add_guest(guest2)
 
 # Бронируем номера
-print(hotel.make_reservation(guest1, room1, "2023-10-01", "2023-10-05"), "\n")
-print(hotel.make_reservation(guest2, room2, "2023-10-02", "2023-10-06"), "\n")
+hotel.make_reservation(guest1, room1, "2023-10-01", "2023-10-05")
+hotel.make_reservation(guest2, room2, "2023-10-02", "2023-10-06")
 
 # Обрабатываем оплату
 for reservation in hotel.reservations:
-    print(hotel.process_payment(reservation), "\n")
+    hotel.process_payment(reservation)
 
 # Выводим информацию
-print(hotel, "\n")
+hotel.showGuests()
+hotel.showRooms()
+hotel.showReservations()
+hotel.showPayments()
 
-# Выводим все номера
-print("All rooms:")
-for room in hotel.rooms:
-    print(room, "\n")
-
-# Выводим всех гостей
-print("All guests:")
-for guest in hotel.guests:
-    print(guest, "\n")
-
-# Выводим все бронирования
-print("All reservations:")
-for reservation in hotel.reservations:
-    print(reservation, "\n")
-
-# Выводим все оплаты
-print("All payments:")
-for payment in hotel.payments:
-    print(payment, "\n")
-
-# Отменяем бронирование
-print(hotel.cancel_reservation(hotel.reservations[0]), "\n")
+# Отменям бронирование
+hotel.cancel_reservation(hotel.reservations[0])
+print()
 
 # Выводим информацию после отмены
 print(hotel, "\n")
