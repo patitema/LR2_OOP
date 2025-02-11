@@ -90,22 +90,22 @@ class Hotel:
     def __str__(self):
         return (f"Hotel: {self.name}, Rooms: {len(self.rooms)}, Guests: {len(self.guests)}, Reservations: {len(self.reservations)}")
     
-    def showGuests(self):
+    def show_guests(self):
         print("Guests:")
         for guest in self.guests:
             print(guest, "\n")
 
-    def showRooms(self):
+    def show_rooms(self):
         print("Rooms:")
         for room in self.rooms:
             print(room, "\n")
 
-    def showReservations(self):
+    def show_reservations(self):
         print("Reservations:")
         for reservation in self.reservations:
             print(reservation, "\n")
 
-    def showPayments(self):
+    def show_payments(self):
         print("Payments:")
         for payment in self.payments:
             print(payment, "\n")
@@ -113,7 +113,7 @@ class Hotel:
 # Создаем отель
 hotel = Hotel("Grand Hotel")
 
-# Добавляем номера
+# Добавляем номер
 room1 = Room(101, "Single", 5000)
 room2 = Room(102, "Double", 9000)
 hotel.add_room(room1)
@@ -136,10 +136,10 @@ for reservation in hotel.reservations:
     hotel.process_payment(reservation)
 
 # Выводим информацию
-hotel.showGuests()
-hotel.showRooms()
-hotel.showReservations()
-hotel.showPayments()
+hotel.show_guests()
+hotel.show_rooms()
+hotel.show_reservations()
+hotel.show_payments()
 
 # Отменям бронирование
 hotel.cancel_reservation(hotel.reservations[0])
