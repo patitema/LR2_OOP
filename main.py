@@ -17,10 +17,9 @@ class Person:
     def __str__(self):
         return f"Person: {self.name} {self.lastName}, age: {self.age}"
 
-
 class Guest(Person):
-    def __init__(self, name, lastName):
-        super().__init__(name, lastName)
+    def __init__(self, name, lastName, age):
+        super().__init__(name, lastName, age)
         self.reservations = []
 
     def add_reservation(self, reservation):
@@ -121,8 +120,10 @@ hotel.add_room(room1)
 hotel.add_room(room2)
 
 # Регистрируем гостей
-guest1 = Guest("Alice")
-guest2 = Guest("Bob")
+person1 = Person("Alice", "Niggerson", 20)
+person2 = Person("Bob", "Ross", 35)
+guest1 = Guest(person1.name, person1.lastName, person1.age)
+guest2 = Guest(person2.name, person2.lastName, person2.age)
 hotel.add_guest(guest1)
 hotel.add_guest(guest2)
 
