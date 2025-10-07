@@ -1,8 +1,15 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
 from datetime import datetime
+from datetime import timedelta 
 from abc import ABC, abstractmethod
 from collections import defaultdict
+import sys
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QGridLayout, QHBoxLayout, 
+    QLabel, QLineEdit, QComboBox, QPushButton, QMessageBox
+)
+from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtCore import Qt
+
 
 LOG_FILE = "hotel.log"
 
@@ -39,13 +46,13 @@ def validate_guest_data(name: str, lastname: str):
     
     if len(name.strip()) < 2 or len(lastname.strip()) < 2:
         raise InvalidGuestDataError("Имя и фамилия должны быть от 2 символов")
+    
 
 class Person(ABC):
     def __init__(self, name, lastName, age=None):
         self.name = name
         self.lastName = lastName
         self.age = age
-        info(f"Создан Person (База): {self.name} {self.lastName}")
 
     @abstractmethod
     def info(self):
@@ -275,112 +282,210 @@ class Hotel:
     
     def available_rooms(self):
         return [r for r in self.rooms_by_number.values() if r.is_available]
+def Sort_guests_and_employees(hotel: Hotel):
+    info("\n--- Демонстрация Задания 3: Лямбда-выражения ---")
+    
+    people = list(hotel.guests_dict.values())
+    people.append(Employee("John", "Doe", "Porter", 30000))
+    people.append(Employee("Jane", "Smith", "Admin", 75000))
+    people.append(Guest("Xavier", "Guest", 65))
 
-class HotelGUI:
+    sorted_by_name = sorted(people, key=lambda p: p.name)
+    info(f"Сортировка по имени: {[p.name for p in sorted_by_name]}") 
+    
+    guests_only = list(filter(lambda p: p.get_role() == "guest", people))
+    info(f"Только гости (роль 'guest'): {[p.name for p in guests_only]}")
+
+    high_paid = [p for p in people if p.get_role() != 'guest' and p._salary > 50000]
+    
+    output_info = list(map(
+        lambda e: f"{e.lastName} ({e.position}): {e._salary}₽", 
+        high_paid
+    ))
+    info(f"Сотрудники с высокой ЗП: {output_info}")
+class HotelApp(QWidget):
     def __init__(self, hotel: Hotel):
+        super().__init__()
         self.hotel = hotel
-        self.root = tk.Tk()
-        self.root.title("Hotel Booking — Быстрое бронирование")
-        frm = ttk.Frame(self.root, padding=12)
-        frm.grid(row=0, column=0, sticky="nsew")
+        self.available_map = {}
+        self.setWindowTitle("🏢 Grand Hotel Booking — PyQt5")
+        self.setGeometry(100, 100, 450, 500) # x, y, width, height
         
-        ttk.Label(frm, text="Имя:").grid(row=0, column=0, sticky="w")
-        self.entry_name = ttk.Entry(frm, width=30)
-        self.entry_name.grid(row=0, column=1, pady=4, sticky="ew")
-        
-        ttk.Label(frm, text="Фамилия:").grid(row=1, column=0, sticky="w")
-        self.entry_lastname = ttk.Entry(frm, width=30)
-        self.entry_lastname.grid(row=1, column=1, pady=4, sticky="ew")
-        
-        ttk.Label(frm, text="Дата заезда (опц.):").grid(row=2, column=0, sticky="w")
-        self.entry_in = ttk.Entry(frm, width=30)
-        self.entry_in.grid(row=2, column=1, pady=4, sticky="ew")
-        self.entry_in.insert(0, "2025-09-10")
-        
-        ttk.Label(frm, text="Дата выезда (опц.):").grid(row=3, column=0, sticky="w")
-        self.entry_out = ttk.Entry(frm, width=30)
-        self.entry_out.grid(row=3, column=1, pady=4, sticky="ew")
-        self.entry_out.insert(0, "2025-09-12")
-        
-        ttk.Label(frm, text="Свободный номер:").grid(row=4, column=0, sticky="w")
-        self.room_var = tk.StringVar()
-        self.combobox_rooms = ttk.Combobox(frm, textvariable=self.room_var, state="readonly", width=28)
-        self.combobox_rooms.grid(row=4, column=1, pady=6, sticky="ew")
-        
-        self.btn_refresh = ttk.Button(frm, text="Обновить список свободных номеров", command=self.refresh_rooms)
-        self.btn_refresh.grid(row=5, column=0, columnspan=2, pady=(6, 2), sticky="ew")
-        
-        self.btn_book = ttk.Button(frm, text="Забронировать", command=self.book_room)
-        self.btn_book.grid(row=6, column=0, columnspan=2, pady=(4, 0), sticky="ew")
-        
-        self.btn_show_res = ttk.Button(frm, text="Показать бронирования", command=self.show_reservations)
-        self.btn_show_res.grid(row=7, column=0, columnspan=2, pady=(8, 0), sticky="ew")
-
-        self.btn_demo = ttk.Button(frm, text="Демо. Наследование/Защищ.", command=self.run_inheritance_demo)
-        self.btn_demo.grid(row=8, column=0, columnspan=2, pady=(8, 0), sticky="ew")
-        
-        self.status_label = ttk.Label(frm, text="")
-        self.status_label.grid(row=9, column=0, columnspan=2, pady=(8,0), sticky="w")
-        
+        self.setup_ui()
+        self.apply_styles()
         self.refresh_rooms()
+        
+    def setup_ui(self):
+        main_layout = QVBoxLayout(self)
+        
+        title_label = QLabel("Оформление бронирования")
+        title_label.setObjectName("TitleLabel")
+        main_layout.addWidget(title_label)
+        
+        form_layout = QGridLayout()
+        form_layout.setVerticalSpacing(10)
+        
+        self.entry_name = QLineEdit()
+        self.entry_lastname = QLineEdit()
+        self.entry_in = QLineEdit(datetime.now().strftime("%Y-%m-%d")) # Текущая дата
+        self.entry_out = QLineEdit((datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")) # +2 дня
+        self.combobox_rooms = QComboBox()
+        self.status_label = QLabel("Подготовка...")
+        self.status_label.setObjectName("StatusLabel")
 
+        fields = [
+            ("Имя:", self.entry_name),
+            ("Фамилия:", self.entry_lastname),
+            ("Дата заезда:", self.entry_in),
+            ("Дата выезда:", self.entry_out),
+            ("Свободный номер:", self.combobox_rooms),
+        ]
+        
+        for i, (label_text, widget) in enumerate(fields):
+            label = QLabel(label_text)
+            label.setObjectName("FormLabel")
+            form_layout.addWidget(label, i, 0)
+            form_layout.addWidget(widget, i, 1)
+
+        main_layout.addLayout(form_layout)
+        
+        button_layout = QGridLayout()
+        
+        self.btn_refresh = QPushButton("Обновить номера")
+        self.btn_book = QPushButton("Забронировать")
+        self.btn_show_res = QPushButton("Показать брони")
+        self.btn_demo = QPushButton("Демонстрация (Полиморфизм)")
+        
+        button_layout.addWidget(self.btn_refresh, 0, 0)
+        button_layout.addWidget(self.btn_book, 0, 1)
+        button_layout.addWidget(self.btn_show_res, 1, 0)
+        button_layout.addWidget(self.btn_demo, 1, 1)
+        
+        main_layout.addLayout(button_layout)
+        
+        main_layout.addSpacing(15)
+        main_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+
+        self.btn_refresh.clicked.connect(self.refresh_rooms)
+        self.btn_book.clicked.connect(self.book_room)
+        self.btn_show_res.clicked.connect(self.show_reservations)
+        self.btn_demo.clicked.connect(self.run_inheritance_demo)
+
+
+    def apply_styles(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #222; /* Светлый фон */
+                color: #FFF;
+                font-family: 'Segoe UI', 'Arial', sans-serif;
+                font-size: 10pt;
+            }
+                           
+            fields{
+                color:#FFF;               
+            }
+            
+            #TitleLabel {
+                font-size: 16pt;
+                font-weight: bold;
+                color: #FFF; /* Темно-синий заголовок */
+                padding-bottom: 15px;
+            }
+            
+            #FormLabel {
+                font-weight: 500;
+                color: #FFF;
+            }
+
+            QLineEdit, QComboBox {
+                padding: 8px;
+                border: 1px solid #CCCCCC;
+                border-radius: 5px;
+                background-color: white;
+                selection-background-color: #353535;
+                color: #222;
+                font-weight: bold;
+            }
+
+            QPushButton {
+                background-color: #353535;
+                color: #FFF;
+                border: none;
+                padding: 10px;
+                margin: 5px 0;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            
+            QPushButton:hover {
+                background-color: #656565;
+            }
+            
+            QPushButton:pressed {
+                background-color: #656565;
+            }
+            
+            #StatusLabel {
+                font-size: 10pt;
+                color: #FFF;
+                font-weight: 500;
+                padding-top: 10px;
+            }
+        """)
+    
     def run_inheritance_demo(self):
         try:
             employee = Employee("Peter", "Jackson", "Manager", _salary=120000)
             
-            info(f"__str__ Employee: {employee}")
-            info(f"__repr__ Employee: {repr(employee)}")
-
             base_first_msg = employee.display_info(use_base_first=True)
             derived_first_msg = employee.display_info(use_base_first=False)
 
-            messagebox.showinfo(
-                "Демонстрация Наследования и Атрибутов",
+            QMessageBox.information(
+                self,
+                "Демонстрация Наследования и Полиморфизма",
                 f"Сотрудник создан (Employee):\n{repr(employee)}\n\n"
-                f"--- Демонстрация Защищенного Атрибута (_salary) ---\n"
-                f"(См. лог: Доступ к _salary: 120000₽)\n\n"
-                f"--- Вызов Переопределенных Методов ---\n"
+                f"--- Демонстрация Полиморфного Метода ---\n"
                 f"Сначала Базовый:\n{base_first_msg}\n\n"
                 f"Сначала Производный:\n{derived_first_msg}"
             )
         except Exception as e:
-            messagebox.showerror("Ошибка Демо", f"Ошибка при демонстрации: {e}")
+            QMessageBox.critical(self, "Ошибка Демо", f"Ошибка при демонстрации: {e}")
+
 
     def refresh_rooms(self):
         available = self.hotel.available_rooms()
         self.available_map = {f"{r.room_number} — {r.room_type} ({r.price}₽)": r for r in available}
         choices = list(self.available_map.keys())
-        self.combobox_rooms['values'] = choices
-        self.room_var.set(choices[0] if choices else "")
+        
+        self.combobox_rooms.clear()
+        if choices:
+            self.combobox_rooms.addItems(choices)
+        
         info("Обновлён список свободных номеров")
-        self.status_label.config(text=f"Доступно номеров: {len(choices)}")
+        self.status_label.setText(f"Доступно номеров: {len(choices)}")
 
     def book_room(self):
-        name = self.entry_name.get().strip()
-        lastname = self.entry_lastname.get().strip()
-        check_in = self.entry_in.get().strip() or "N/A"
-        check_out = self.entry_out.get().strip() or "N/A"
-        room_choice = self.room_var.get().strip()
+        name = self.entry_name.text().strip()
+        lastname = self.entry_lastname.text().strip()
+        check_in = self.entry_in.text().strip()
+        check_out = self.entry_out.text().strip()
+        room_choice = self.combobox_rooms.currentText().strip()
         
         if not name or not lastname:
-            messagebox.showwarning("Ошибка", "Введите имя и фамилию.")
+            QMessageBox.warning(self, "Ошибка", "Введите имя и фамилию.")
             return
         if not room_choice:
-            messagebox.showwarning("Ошибка", "Выберите свободный номер.")
+            QMessageBox.warning(self, "Ошибка", "Выберите свободный номер.")
             return
 
         try:
             validate_guest_data(name, lastname)
         except InvalidGuestDataError as e:
-            messagebox.showerror("Ошибка данных", str(e))
+            QMessageBox.critical(self, "Ошибка данных", str(e))
             return
         
         room = self.available_map.get(room_choice)
-        if room is None:
-            messagebox.showerror("Ошибка", "Выбранный номер недоступен. Обновите список.")
-            self.refresh_rooms()
-            return
-
+        
         guest = self.hotel.find_guest(name, lastname)
         if guest is None:
             guest = Guest(name, lastname)
@@ -391,12 +496,14 @@ class HotelGUI:
         if reservation:
             nights = 1
             try:
-                nights = max(1, (datetime.fromisoformat(check_out) - datetime.fromisoformat(check_in)).days)
+                nights = max(1, (datetime.strptime(check_out, "%Y-%m-%d") - datetime.strptime(check_in, "%Y-%m-%d")).days)
             except Exception:
                 nights = 1
+            
             total_with_tax = Room.calculate_total_price(room.price, nights)
-            messagebox.showinfo(
-                "Успех",
+            QMessageBox.information(
+                self,
+                "Успех бронирования 🎉",
                 f"Номер {room.room_number} успешно забронирован за {name} {lastname}.\n"
                 f"Даты: {check_in} — {check_out}\n"
                 f"Стоимость ({nights} ноч.): {total_with_tax}₽ (с налогом)"
@@ -408,19 +515,15 @@ class HotelGUI:
     def show_reservations(self):
         info("Пользователь запросил просмотр бронирований через GUI")
         if not self.hotel.reservations:
-            messagebox.showinfo("Бронирования", "Бронирований нет.")
-            info("Бронирований нет")
+            QMessageBox.information(self, "Бронирования", "Бронирований нет.")
             return
+            
         lines = []
         for idx, r in enumerate(self.hotel.reservations, start=1):
             lines.append(f"{idx}. {r.guest.name} {r.guest.lastName} — Номер {r.room.room_number} — {r.dates[0]} → {r.dates[1]}")
+            
         text = "\n".join(lines)
-        messagebox.showinfo("Существующие бронирования", text)
-        info(f"Бронирования: {len(lines)}")
-        
-    def run(self):
-        self.root.mainloop()
-
+        QMessageBox.information(self, "Существующие бронирования", text)
 hotel = Hotel("Grand Hotel")
 room1 = hotel.add_room(Room(101, "Single", 5000))
 room2 = hotel.add_room(Room(102, "Double", 8000))
@@ -432,14 +535,8 @@ info(f"Статистика по номерному фонду: {Room.get_room_s
 guest1 = hotel.add_guest(Guest("Alice", "Johnson", 30))
 guest2 = hotel.add_guest(Guest("Bob", "Ross", 45))
 
-info("\n--- Демонстрация Задания 1: Обработка исключений ---")
-hotel.make_reservation(guest1, room1, "2025-10-10", "2025-10-12") 
-hotel.make_reservation(guest2, room1, "2025-10-13", "2025-10-15") 
-hotel.make_reservation(None, room2, "2025-10-13", "2025-10-15") 
-hotel.make_reservation(guest2, "НеКомната", "2025-10-13", "2025-10-15") 
 
 
-info("\n--- Демонстрация Задания 2: Массивы объектов ---")
 room_mgr = RoomManager()
 room_mgr.add_room_1d(room1)
 room_mgr.add_room_1d(room3)
@@ -451,18 +548,10 @@ rooms_2d_example = [
 ]
 room_mgr.set_rooms_2d(rooms_2d_example)
 
-try:
-    max_room = room_mgr.find_room_with_max_price()
-    info(f"Номер с максимальной ценой в 2D массиве: {max_room.room_number} ({max_room.price}₽)")
-except BaseHotelError as e:
-    error(f"Ошибка в RoomManager: {e}")
 
-empty_mgr = RoomManager()
-try:
-    empty_mgr.find_room_with_max_price()
-except EmptyRoomListError as e:
-    info(f"Успешно поймана ошибка: {e}")
+Sort_guests_and_employees(hotel)
 
-
-gui = HotelGUI(hotel)
-gui.run()
+app = QApplication(sys.argv)
+ex = HotelApp(hotel)
+ex.show()
+sys.exit(app.exec_())
