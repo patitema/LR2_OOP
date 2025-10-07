@@ -308,8 +308,8 @@ class HotelApp(QWidget):
         super().__init__()
         self.hotel = hotel
         self.available_map = {}
-        self.setWindowTitle("🏢 Grand Hotel Booking — PyQt5")
-        self.setGeometry(100, 100, 450, 500) # x, y, width, height
+        self.setWindowTitle("Grand Hotel Booking")
+        self.setGeometry(100, 100, 450, 500)
         
         self.setup_ui()
         self.apply_styles()
@@ -327,8 +327,8 @@ class HotelApp(QWidget):
         
         self.entry_name = QLineEdit()
         self.entry_lastname = QLineEdit()
-        self.entry_in = QLineEdit(datetime.now().strftime("%Y-%m-%d")) # Текущая дата
-        self.entry_out = QLineEdit((datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")) # +2 дня
+        self.entry_in = QLineEdit(datetime.now().strftime("%Y-%m-%d"))
+        self.entry_out = QLineEdit((datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d"))
         self.combobox_rooms = QComboBox()
         self.status_label = QLabel("Подготовка...")
         self.status_label.setObjectName("StatusLabel")
@@ -354,12 +354,10 @@ class HotelApp(QWidget):
         self.btn_refresh = QPushButton("Обновить номера")
         self.btn_book = QPushButton("Забронировать")
         self.btn_show_res = QPushButton("Показать брони")
-        self.btn_demo = QPushButton("Демонстрация (Полиморфизм)")
         
         button_layout.addWidget(self.btn_refresh, 0, 0)
         button_layout.addWidget(self.btn_book, 0, 1)
         button_layout.addWidget(self.btn_show_res, 1, 0)
-        button_layout.addWidget(self.btn_demo, 1, 1)
         
         main_layout.addLayout(button_layout)
         
@@ -369,7 +367,6 @@ class HotelApp(QWidget):
         self.btn_refresh.clicked.connect(self.refresh_rooms)
         self.btn_book.clicked.connect(self.book_room)
         self.btn_show_res.clicked.connect(self.show_reservations)
-        self.btn_demo.clicked.connect(self.run_inheritance_demo)
 
 
     def apply_styles(self):
@@ -432,24 +429,6 @@ class HotelApp(QWidget):
                 padding-top: 10px;
             }
         """)
-    
-    def run_inheritance_demo(self):
-        try:
-            employee = Employee("Peter", "Jackson", "Manager", _salary=120000)
-            
-            base_first_msg = employee.display_info(use_base_first=True)
-            derived_first_msg = employee.display_info(use_base_first=False)
-
-            QMessageBox.information(
-                self,
-                "Демонстрация Наследования и Полиморфизма",
-                f"Сотрудник создан (Employee):\n{repr(employee)}\n\n"
-                f"--- Демонстрация Полиморфного Метода ---\n"
-                f"Сначала Базовый:\n{base_first_msg}\n\n"
-                f"Сначала Производный:\n{derived_first_msg}"
-            )
-        except Exception as e:
-            QMessageBox.critical(self, "Ошибка Демо", f"Ошибка при демонстрации: {e}")
 
 
     def refresh_rooms(self):
@@ -503,7 +482,7 @@ class HotelApp(QWidget):
             total_with_tax = Room.calculate_total_price(room.price, nights)
             QMessageBox.information(
                 self,
-                "Успех бронирования 🎉",
+                "Успех бронирования!",
                 f"Номер {room.room_number} успешно забронирован за {name} {lastname}.\n"
                 f"Даты: {check_in} — {check_out}\n"
                 f"Стоимость ({nights} ноч.): {total_with_tax}₽ (с налогом)"
